@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Last Samurai</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;1,8..60,300;1,8..60,400&family=Cinzel:wght@600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#060508;
+  --paper:#ece6d8;
+  --dim:rgba(236,230,216,0.72);
+  --vdim:rgba(236,230,216,0.38);
+  --blood:#8c0000;
+  --blood2:#b51a1a;
+  --ember:#c25520;
+  --gold:#c49530;
+  --gold2:#e0b855;
+  --ws:#aacfe0;
+  --ash:#18141e;
+  --panel-bg:rgba(255,255,255,0.025);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--ink);color:var(--paper);font-family:'Source Serif 4',serif;overflow-x:hidden;cursor:default;}
+
+/* grain texture */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:8000;
+  opacity:.35;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='250' height='250' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");}
+
+::selection{background:rgba(140,0,0,.45);color:var(--paper);}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--ink);}
+::-webkit-scrollbar-thumb{background:var(--blood);border-radius:2px;}
+
+/* ─────────────────────────────────────
+   PROGRESS BAR
+───────────────────────────────────── */
+#prog{position:fixed;top:0;left:0;height:3px;width:0%;z-index:9999;
+  background:linear-gradient(90deg,var(--blood),var(--gold2),var(--blood2));
+  box-shadow:0 0 12px rgba(196,149,48,.6);transition:width .08s linear;}
+
+/* ─────────────────────────────────────
+   SOUND BUTTON
+───────────────────────────────────── */
+#snd{
+  position:fixed;bottom:32px;right:28px;z-index:9000;
+  width:52px;height:52px;border-radius:50%;
+  background:rgba(18,14,22,.92);border:1px solid rgba(196,149,48,.4);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .3s;backdrop-filter:blur(10px);
+  font-size:20px;opacity:0;animation:sndIn .8s ease 5.2s forwards;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+}
+#snd:hover{border-color:var(--gold2);box-shadow:0 0 24px rgba(196,149,48,.3),0 4px 20px rgba(0,0,0,.5);}
+@keyframes sndIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ─────────────────────────────────────
+   CHAPTER NAV
+───────────────────────────────────── */
+#cnav{position:fixed;top:22px;right:24px;z-index:9000;opacity:0;transition:opacity .5s;}
+#cnav.show{opacity:1;}
+#cnavt{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.45em;
+  color:rgba(196,149,48,.55);text-transform:uppercase;text-align:right;}
+
+/* ─────────────────────────────────────
+   LOADER
+───────────────────────────────────── */
+#loader{position:fixed;inset:0;background:var(--ink);z-index:10000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;
+  transition:opacity 1.5s ease,visibility 1.5s ease;}
+#loader.out{opacity:0;visibility:hidden;}
+.lk{font-family:'Shippori Mincho',serif;font-size:clamp(100px,18vw,190px);
+  color:var(--blood);letter-spacing:.15em;
+  text-shadow:0 0 90px rgba(140,0,0,.8),0 0 180px rgba(140,0,0,.35);
+  animation:lkp 2.2s ease-in-out infinite;}
+@keyframes lkp{0%,100%{opacity:.55;transform:scale(1);}50%{opacity:1;transform:scale(1.035);}}
+.ll{font-family:'Cinzel',serif;font-size:clamp(10px,1.3vw,13px);
+  letter-spacing:.65em;color:var(--gold2);text-transform:uppercase;opacity:.7;}
+.lt{width:200px;height:1px;background:rgba(196,149,48,.18);overflow:hidden;margin-top:8px;}
+.lf{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));
+  box-shadow:0 0 8px var(--gold2);animation:lfi 3s ease forwards;}
+@keyframes lfi{to{width:100%;}}
+
+/* ─────────────────────────────────────
+   HERO
+───────────────────────────────────── */
+#hero{min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;position:relative;overflow:hidden;
+  background:
+    radial-gradient(ellipse 60% 75% at 50% 62%,rgba(140,0,0,.16) 0%,transparent 68%),
+    radial-gradient(ellipse 100% 55% at 50% 100%,rgba(140,0,0,.1) 0%,transparent 60%),
+    var(--ink);}
+#hero::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:repeating-linear-gradient(90deg,rgba(196,149,48,.016) 0,rgba(196,149,48,.016) 1px,transparent 1px,transparent 88px);}
+
+.hbg{position:absolute;font-family:'Shippori Mincho',serif;
+  font-size:clamp(200px,42vw,500px);color:rgba(140,0,0,.05);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  white-space:nowrap;pointer-events:none;user-select:none;letter-spacing:.04em;line-height:1;}
+
+.hi{position:relative;z-index:2;text-align:center;padding:48px 24px;}
+
+.he{font-family:'Cinzel',serif;font-size:clamp(10px,1.2vw,12px);
+  letter-spacing:.7em;color:var(--gold2);text-transform:uppercase;
+  opacity:0;animation:riseIn 1s ease 3.1s forwards;margin-bottom:32px;}
+
+.ht{font-family:'Playfair Display',serif;font-size:clamp(56px,12vw,148px);
+  font-weight:900;line-height:.86;letter-spacing:-.02em;
+  text-shadow:0 0 120px rgba(196,149,48,.28),0 6px 0 rgba(0,0,0,.7);
+  opacity:0;animation:riseIn 1.6s ease 3.3s forwards;}
+.ht em{font-style:normal;display:block;color:var(--blood2);
+  text-shadow:0 0 60px rgba(181,26,26,.85),0 0 120px rgba(181,26,26,.4),0 6px 0 rgba(0,0,0,.7);}
+
+.hline{width:0;height:1px;margin:32px auto;
+  background:linear-gradient(90deg,transparent,var(--gold2),transparent);
+  opacity:0;animation:lineOut 1s ease 3.9s forwards;}
+@keyframes lineOut{to{width:300px;opacity:1;}}
+
+.htag{font-family:'Source Serif 4',serif;font-size:clamp(17px,2.3vw,22px);
+  font-style:italic;font-weight:300;color:var(--dim);
+  line-height:1.7;letter-spacing:.04em;
+  opacity:0;animation:riseIn 1s ease 4.1s forwards;margin-bottom:60px;}
+
+.hbtn{font-family:'Cinzel',serif;font-size:clamp(11px,1.3vw,13px);
+  letter-spacing:.55em;text-transform:uppercase;
+  color:var(--ink);background:linear-gradient(135deg,var(--gold),var(--gold2));
+  border:none;padding:20px 58px;cursor:pointer;
+  clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);
+  opacity:0;animation:riseIn 1s ease 4.4s forwards;
+  transition:transform .25s,box-shadow .25s;font-weight:700;}
+.hbtn:hover{transform:translateY(-3px);box-shadow:0 14px 44px rgba(196,149,48,.38);}
+
+.hscroll{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  opacity:0;animation:riseIn .8s ease 5s forwards;}
+.hscroll span{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.5em;
+  color:rgba(196,149,48,.4);text-transform:uppercase;}
+.hsl{width:1px;height:46px;background:linear-gradient(to bottom,var(--gold2),transparent);
+  animation:slAnim 2.2s ease-in-out infinite;}
+@keyframes slAnim{0%,100%{opacity:.28;transform:scaleY(.7);}50%{opacity:1;transform:scaleY(1);}}
+
+@keyframes riseIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+/* ─────────────────────────────────────
+   STORY WRAPPER
+───────────────────────────────────── */
+#story{max-width:800px;margin:0 auto;padding:0 32px 160px;}
+
+/* ─────────────────────────────────────
+   CHAPTER HEADER
+───────────────────────────────────── */
+.chap{padding-top:80px;}
+.chead{text-align:center;padding:90px 0 70px;position:relative;}
+.chead::before{content:'';display:block;width:1px;height:70px;
+  background:linear-gradient(to bottom,transparent,var(--blood2));
+  margin:0 auto 48px;}
+.ckbg{position:absolute;right:-10px;top:50px;
+  font-family:'Shippori Mincho',serif;
+  font-size:clamp(130px,24vw,260px);
+  color:rgba(140,0,0,.04);
+  pointer-events:none;user-select:none;line-height:1;z-index:-1;}
+.cnum{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.7em;
+  color:var(--blood2);text-transform:uppercase;margin-bottom:20px;opacity:.9;}
+.ctitle{font-family:'Playfair Display',serif;font-size:clamp(28px,5.5vw,60px);
+  font-weight:900;color:var(--paper);line-height:1.1;
+  text-shadow:0 0 60px rgba(196,149,48,.18);margin-bottom:14px;}
+.csub{font-family:'Source Serif 4',serif;font-size:clamp(15px,2vw,19px);
+  font-style:italic;font-weight:300;color:var(--gold2);
+  opacity:.85;margin-bottom:52px;line-height:1.6;}
+.cdiv{display:flex;align-items:center;gap:16px;max-width:300px;margin:0 auto;}
+.cdiv::before{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold));}
+.cdiv::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold),transparent);}
+.csym{color:var(--gold2);font-size:18px;opacity:.8;}
+
+/* ─────────────────────────────────────
+   BEAT — story unit
+───────────────────────────────────── */
+.beat{margin-bottom:56px;opacity:0;transform:translateY(28px);
+  transition:opacity 1s ease,transform 1s ease;}
+.beat.on{opacity:1;transform:translateY(0);}
+
+/* scene note */
+.scene{font-family:'Source Serif 4',serif;font-size:clamp(14px,1.8vw,16px);
+  font-style:italic;font-weight:300;color:var(--vdim);
+  line-height:1.75;margin-bottom:20px;padding-left:20px;
+  border-left:2px solid rgba(196,149,48,.2);}
+
+/* narrator — the main story text. BIG. Readable. */
+.nar{font-family:'Source Serif 4',serif;
+  font-size:clamp(20px,2.8vw,26px);
+  font-weight:400;line-height:2;color:var(--dim);margin-bottom:26px;}
+
+/* dialogue */
+.dlg{margin-bottom:26px;}
+.who{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.5em;
+  text-transform:uppercase;display:block;margin-bottom:9px;}
+.who.k{color:var(--gold2);}
+.who.v{color:#d05040;}
+.who.ws{color:var(--ws);}
+.who.m{color:#d4b898;}
+.who.g{color:#908070;}
+.line{font-family:'Source Serif 4',serif;
+  font-size:clamp(20px,2.8vw,26px);
+  font-weight:400;line-height:1.9;color:var(--paper);
+  padding-left:24px;border-left:2px solid rgba(236,230,216,.14);display:block;}
+.dlg.vil .line{border-left-color:rgba(208,80,64,.4);}
+.dlg.sp  .line{border-left-color:rgba(170,207,224,.35);}
+.dlg.ma  .line{border-left-color:rgba(212,184,152,.35);}
+
+/* thought */
+.think{font-family:'Source Serif 4',serif;
+  font-size:clamp(19px,2.6vw,24px);
+  font-style:italic;font-weight:300;
+  color:rgba(236,230,216,.48);
+  line-height:1.9;margin-bottom:26px;
+  padding-left:30px;position:relative;}
+.think::before{content:'—';position:absolute;left:0;color:var(--gold);opacity:.45;}
+
+/* SFX — big visual text, no sound */
+.sfx{font-family:'Playfair Display',serif;
+  font-size:clamp(26px,4vw,42px);font-weight:900;
+  color:var(--blood2);letter-spacing:.06em;
+  text-shadow:0 0 30px rgba(181,26,26,.6),3px 3px 0 rgba(0,0,0,.6);
+  display:block;text-align:center;margin:32px 0;
+  opacity:0;transform:scale(.6) translateY(10px);
+  transition:opacity .45s ease .25s,transform .45s cubic-bezier(.34,1.56,.64,1) .25s;}
+.beat.on .sfx{opacity:1;transform:scale(1) translateY(0);}
+
+/* dramatic beat */
+.beat.big{padding:40px 36px;
+  background:linear-gradient(135deg,rgba(140,0,0,.08) 0%,rgba(255,255,255,.01) 60%);
+  border:1px solid rgba(140,0,0,.22);position:relative;overflow:hidden;}
+.beat.big::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--blood2),transparent);}
+.beat.big::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(140,0,0,.4),transparent);}
+
+/* memory panel */
+.beat.mem{background:rgba(196,149,48,.04);border:1px solid rgba(196,149,48,.16);
+  padding:34px 32px;position:relative;}
+.beat.mem::before{content:'MEMORY';position:absolute;top:-1px;left:32px;
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:.55em;color:var(--gold2);
+  background:var(--ink);padding:0 12px;opacity:.65;}
+
+/* dream panel */
+.beat.dream{background:rgba(170,207,224,.03);border:1px solid rgba(170,207,224,.14);
+  padding:34px 32px;position:relative;}
+.beat.dream::before{content:'DREAM';position:absolute;top:-1px;left:32px;
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:.55em;color:var(--ws);
+  background:var(--ink);padding:0 12px;opacity:.65;}
+
+/* ─────────────────────────────────────
+   CHAPTER END
+───────────────────────────────────── */
+.cend{text-align:center;padding:56px 0 110px;}
+.cendline{width:180px;height:1px;margin:0 auto 30px;
+  background:linear-gradient(90deg,transparent,var(--blood2),transparent);}
+.cendlabel{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.55em;
+  color:var(--blood2);text-transform:uppercase;opacity:.7;margin-bottom:22px;}
+.cendhook{font-family:'Source Serif 4',serif;
+  font-size:clamp(17px,2.3vw,22px);
+  font-style:italic;color:var(--gold2);opacity:.95;line-height:1.75;}
+
+/* ─────────────────────────────────────
+   STORY END
+───────────────────────────────────── */
+#end{text-align:center;padding:90px 24px 200px;}
+.ek{font-family:'Shippori Mincho',serif;font-size:96px;color:var(--blood);
+  display:block;margin-bottom:30px;
+  text-shadow:0 0 60px rgba(140,0,0,.7);
+  opacity:0;transform:scale(.75);transition:all 1.4s ease;}
+.ek.on{opacity:1;transform:scale(1);}
+.et{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,42px);
+  font-weight:900;color:var(--paper);margin-bottom:18px;
+  opacity:0;transition:opacity 1s ease .35s;}
+.es{font-family:'Source Serif 4',serif;font-size:clamp(17px,2.2vw,21px);
+  font-style:italic;color:var(--dim);
+  opacity:0;transition:opacity 1s ease .65s;}
+.et.on,.es.on{opacity:1;}
+
+#fb{position:fixed;bottom:0;left:0;right:0;height:170px;
+  background:linear-gradient(to top,var(--ink),transparent);
+  pointer-events:none;z-index:100;}
+
+@media(max-width:640px){
+  #story{padding:0 18px 80px;}
+  .beat.big,.beat.mem,.beat.dream{padding:24px 18px;}
+  .chead{padding:60px 0 50px;}
+}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<!-- AUDIO -->
+<audio id="bgm" loop>
+  <source src="https://cdn.pixabay.com/audio/2022/10/30/audio_65cf9e8f17.mp3" type="audio/mpeg">
+</audio>
+<audio id="sfxSword" preload="auto">
+  <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_8cb749e7b8.mp3" type="audio/mpeg">
+</audio>
+<audio id="sfxBoom" preload="auto">
+  <source src="https://cdn.pixabay.com/audio/2022/03/24/audio_5acf702045.mp3" type="audio/mpeg">
+</audio>
+<audio id="sfxWhoosh" preload="auto">
+  <source src="https://cdn.pixabay.com/audio/2021/08/09/audio_dc39bde3cb.mp3" type="audio/mpeg">
+</audio>
+
+<!-- SOUND BUTTON -->
+<button id="snd" title="Toggle sound" onclick="toggleSound()">🔊</button>
+
+<!-- CHAPTER NAV -->
+<div id="cnav"><div id="cnavt"></div></div>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="lk">侍</div>
+  <div class="ll">The Last Samurai</div>
+  <div class="lt"><div class="lf"></div></div>
+</div>
+
+<!-- ══════════════════════════════════
+     HERO
+══════════════════════════════════ -->
+<section id="hero">
+  <div class="hbg">最後の侍</div>
+  <div class="hi">
+    <div class="he">An Ancient Epic of Steel &amp; Spirits</div>
+    <h1 class="ht">The Last<em>Samurai</em></h1>
+    <div class="hline"></div>
+    <p class="htag">
+      "When the last light is taken from a man —<br>
+      what remains is either ruin, or legend."
+    </p>
+    <button class="hbtn" onclick="startReading()">⚔ &nbsp; Begin Reading</button>
+  </div>
+  <div class="hscroll"><span>Scroll</span><div class="hsl"></div></div>
+</section>
+
+<!-- ══════════════════════════════════
+     STORY
+══════════════════════════════════ -->
+<main id="story">
+
+<!-- ━━━━━━━━ CHAPTER 1 ━━━━━━━━ -->
+<article class="chap" data-ch="1">
+<div class="chead">
+  <div class="ckbg">霧</div>
+  <div class="cnum">Chapter One</div>
+  <h2 class="ctitle">The Fog That Should Not Exist</h2>
+  <p class="csub">"A warrior's greatest weapon is not his blade. It is his instinct."</p>
+  <div class="cdiv"><span class="csym">⚔</span></div>
+</div>
+
+<div class="beat">
+  <div class="scene">An ancient village. Night. The kind of night that feels like it is holding its breath.</div>
+  <div class="nar">His name was Kazutora.</div>
+  <div class="nar">Not a legend. Not yet. Just a swordsman — sharp as his blade, cold as the metal he carried. A man who trained until his hands bled and felt nothing he didn't choose to feel.</div>
+  <div class="nar">That discipline had kept him alive for years.</div>
+  <div class="nar">Tonight, it would be tested.</div>
+</div>
+
+<div class="beat">
+  <div class="scene">He stands at his window. The lanterns outside flicker — then one goes dark. Then another.</div>
+  <div class="nar">Fog was rolling in. But not like any fog he had seen before.</div>
+  <div class="nar">Normal fog follows the cold. Follows the river. This fog followed nothing. It moved like something alive — slow, deliberate, swallowing the road piece by piece.</div>
+  <div class="think">This isn't weather. This is a presence.</div>
+</div>
+
+<div class="beat big" data-sound="whoosh">
+  <div class="scene">He steps outside. The village is dead silent. No voices. No animals. Nothing.</div>
+  <div class="sfx">シーン… — Silence so thick it feels like a wall.</div>
+  <div class="nar">He walked every street. Checked every shadow. Every doorway. Every dark corner.</div>
+  <div class="nar">Nothing.</div>
+  <div class="nar">And yet — the feeling didn't leave. The deep, bone-cold feeling that something enormous was watching him. Something that didn't need to move closer, because it was already exactly where it wanted to be.</div>
+</div>
+
+<div class="beat">
+  <div class="scene">He stops walking. Every hair on the back of his neck stands up at once.</div>
+  <div class="think">The fog behind me is darker than the rest.</div>
+  <div class="think">Don't turn fast. Let it think I don't know.</div>
+</div>
+
+<div class="beat big" data-sound="whoosh">
+  <div class="nar">Then — a voice.</div>
+  <div class="nar">Low. Calm. Spoken like the name of something already decided.</div>
+  <div class="dlg vil">
+    <span class="who v">The Voice — from directly behind him</span>
+    <span class="line">"…Kazutora."</span>
+  </div>
+  <div class="sfx">ドクン — One heartbeat. Loud as a war drum.</div>
+  <div class="nar">He turned.</div>
+</div>
+
+<div class="beat big" data-sound="whoosh">
+  <div class="scene">The fog split open like a curtain being torn apart. What stood in the road was shaped like a man — but only barely.</div>
+  <div class="nar">Black hair floating upward against gravity. Robes so dark they ate the surrounding light. And wrapped around every inch of this figure — a black aura. Not glowing. Devouring. Like a hole ripped in the air, filled with something that had crawled out from a place no living thing was meant to see.</div>
+  <div class="sfx">ゴゴゴゴ… — The aura doesn't hum. It consumes sound.</div>
+  <div class="think">That's not a human. That is something else entirely.</div>
+  <div class="think">Move anyway.</div>
+</div>
+
+<div class="beat">
+  <div class="nar">Here is what most people never learn — because the ones who learn it usually don't survive to pass it on.</div>
+  <div class="nar">Spirits are real. They exist woven into everything — every person, every blade, every stone. Most are harmless. Many are light.</div>
+  <div class="nar">But the Black Spirits? They are something else. They don't just fight. They consume. They don't just kill. They unmake. And the worst part? You can't kill them. Destroy their body — their soul just waits, rebuilds, comes back. Again. And again. Patient as stone. Relentless as rot.</div>
+  <div class="nar">Kazutora didn't know all of this yet.</div>
+  <div class="nar">He drew his sword anyway.</div>
+</div>
+
+<div class="beat big" data-sound="sword">
+  <div class="sfx">バシュッ！！ — The fastest draw of his life.</div>
+  <div class="scene">Perfect. Clean. A diagonal slash straight through the figure's torso. The kind of strike that has never failed to end things.</div>
+  <div class="sfx">スウ… — The aura closes like smoke over water. Nothing.</div>
+  <div class="nar">The Black Spirit looked down at the spot where the blade had passed. Then looked back up at Kazutora. Expression unchanged. If anything — there was a flicker of interest in those hollow, lightless eyes.</div>
+  <div class="dlg vil">
+    <span class="who v">Black Spirit</span>
+    <span class="line">"Steel. How human of you."</span>
+  </div>
+  <div class="think">My sword passed through him like air. The one thing I have always trusted — did nothing.</div>
+  <div class="think">What is this thing?</div>
+</div>
+
+<div class="cend">
+  <div class="cendline"></div>
+  <div class="cendlabel">End of Chapter One</div>
+  <div class="cendhook">A blade that cannot cut. An enemy that cannot die.<br>And a man with nothing left — except the will to find an answer.</div>
+</div>
+</article>
+
+<!-- ━━━━━━━━ CHAPTER 2 ━━━━━━━━ -->
+<article class="chap" data-ch="2">
+<div class="chead">
+  <div class="ckbg">魂</div>
+  <div class="cnum">Chapter Two</div>
+  <h2 class="ctitle">The Power That Has No Name Yet</h2>
+  <p class="csub">"He didn't know where it came from. Only that it came from her."</p>
+  <div class="cdiv"><span class="csym">⚔</span></div>
+</div>
+
+<div class="beat">
+  <div class="scene">The Black Spirit stands completely still — watching Kazutora the way a hunter watches something rare.</div>
+  <div class="think" style="color:rgba(208,80,64,0.7);font-style:italic;">His speed is extraordinary. His eyes have no fear in them. Only cold calculation. This is a samurai.</div>
+  <div class="nar">But the Black Spirit didn't feel threatened.</div>
+  <div class="nar">He had faced a hundred samurai before this. He had broken every single one. Their power now lived inside him — absorbed, consumed, gone. Their names forgotten. Their light extinguished.</div>
+  <div class="nar">This one would be no different.</div>
+</div>
+
+<div class="beat big" data-sound="boom">
+  <div class="scene">The Black Spirit raises one hand. Slowly. Almost bored.</div>
+  <div class="nar">What forms in his palm isn't simply energy. It is every samurai soul he has ever consumed, compressed into a single point. Black at the core. Bleeding into deep red at the edges. Crackling with cold. The ground cracks beneath him. The last lanterns on the street snuff out one by one.</div>
+  <div class="sfx">ドドドド… — Power born from stolen souls.</div>
+  <div class="dlg vil">
+    <span class="who v">Black Spirit — almost gentle</span>
+    <span class="line">"Many have stood where you stand. They were all exceptional, in their time."</span>
+  </div>
+  <div class="sfx">ドォォォン！！！ — The blast fires.</div>
+  <div class="scene">It's not an attack. It's an erasure. A mass of compressed darkness tears through the road — black lightning coiling around it, leaving a scorched furrow in the earth, shattering stone and wood like they're made of paper.</div>
+</div>
+
+<div class="beat">
+  <div class="nar">In the half-second before it hit — something happened inside Kazutora.</div>
+  <div class="nar">A silence opened in his mind. Deep. Still. Like the surface of a lake before a stone drops in.</div>
+  <div class="nar">And inside that silence — a face.</div>
+  <div class="nar">Not summoned. Not chosen. Just — there. The way the most important things always arrive without being invited.</div>
+</div>
+
+<div class="beat mem">
+  <div class="scene">A girl. Dark eyes that always seemed to see further into him than he had given her permission to. A quiet certainty about her — like she had already decided what he was capable of, long before he had.</div>
+  <div class="nar">Masako.</div>
+</div>
+
+<div class="beat big" data-sound="boom">
+  <div class="scene">His eyes turned white.</div>
+  <div class="nar">Not blank. Not blind. White like a fire burning so hot the flames lose their color. Something enormous released itself from inside him — something that had been waiting, silent and patient, for exactly this moment.</div>
+  <div class="nar">It wasn't a technique he had trained. It wasn't a skill he had developed. It was something deeper than all of that. Something that lived in the part of him that still belonged to her.</div>
+  <div class="sfx">バァァァン！！！ — Night-energy. Unstoppable. Furious. His.</div>
+  <div class="dlg vil">
+    <span class="who v">Black Spirit — for the first time, shaken</span>
+    <span class="line">"What… is this?"</span>
+  </div>
+</div>
+
+<div class="beat big" data-sound="boom">
+  <div class="sfx">ドカァァァン！！！ — The world turns white.</div>
+  <div class="nar">The explosion swallowed the street. When it cleared — craters, smoke, silence. The Black Spirit's body was completely buried under the blast.</div>
+  <div class="nar">Kazutora stood at the edge of it, breathing hard for the first time. Eyes back to normal. Hands trembling — not from fear. From the sheer strangeness of what had just poured out of him.</div>
+  <div class="think">That wasn't my technique. That came from somewhere I don't understand yet. And he's not dead. Something like that doesn't stay dead.</div>
+</div>
+
+<div class="beat">
+  <div class="nar">He ran. Not out of panic — out of tactical sense. The spirit would reform. He needed answers before it did.</div>
+  <div class="nar">He glanced back once as the fog closed behind him. One last thing said into the dark — not a threat. Not a farewell. Just a fact.</div>
+  <div class="dlg">
+    <span class="who k">Kazutora</span>
+    <span class="line">"See you again."</span>
+  </div>
+</div>
+
+<div class="cend">
+  <div class="cendline"></div>
+  <div class="cendlabel">End of Chapter Two</div>
+  <div class="cendhook">He survived. But his blade didn't save him.<br>A memory did. And he didn't understand why yet.</div>
+</div>
+</article>
+
+<!-- ━━━━━━━━ CHAPTER 3 ━━━━━━━━ -->
+<article class="chap" data-ch="3">
+<div class="chead">
+  <div class="ckbg">白</div>
+  <div class="cnum">Chapter Three</div>
+  <h2 class="ctitle">The White That Does Not Burn</h2>
+  <p class="csub">"Not every force that stops you is your enemy."</p>
+  <div class="cdiv"><span class="csym">⚔</span></div>
+</div>
+
+<div class="beat">
+  <div class="nar">He ran. Questions chased him harder than any enemy could.</div>
+  <div class="think">Why me. Why tonight. What was that white light. Where did it come from. Why did it feel like her.</div>
+  <div class="nar">He turned a corner — and stopped dead.</div>
+</div>
+
+<div class="beat">
+  <div class="scene">In the center of the road ahead, a white aura hovered. The fog had pulled back around it, as if giving it space.</div>
+  <div class="nar">It wasn't aggressive. It wasn't retreating. It was simply there — like a mountain. Inevitable. Immovable. Radiating power so quietly it was almost peaceful.</div>
+  <div class="think">Nothing like the Black Spirit. That darkness felt like destruction. This feels like… a question waiting to be answered.</div>
+  <div class="think">But I don't know whose side this is on.</div>
+</div>
+
+<div class="beat big" data-sound="sword">
+  <div class="nar">The aura pulsed once. Like a heartbeat. Then it spoke. Two words only.</div>
+  <div class="dlg sp">
+    <span class="who ws">White Aura</span>
+    <span class="line">"Fight me."</span>
+  </div>
+  <div class="nar">Kazutora had not finished hearing those words when the aura became a blade — a pure white edge of energy that crossed the distance between them before instinct could catch up.</div>
+  <div class="sfx">バシュッ！！！ — Faster than thought. Faster than anything.</div>
+  <div class="nar">He hit the ground. The world went dark.</div>
+</div>
+
+<div class="beat dream">
+  <div class="scene">White. Infinite. Soft — like snow before footprints arrive. He was standing in it, his katana still at his side. No ground beneath him, but he wasn't falling.</div>
+  <div class="nar">A voice came from everywhere at once. Calm. Ancient.</div>
+  <div class="nar">Spirits exist in forms beyond what any human eye can see. Their nature isn't given to them — it's chosen. Shaped by everything they've witnessed, every soul they've ever touched. Some grew toward darkness. Others toward light. Both for the same reason — because that was what they were surrounded by.</div>
+  <div class="dlg sp">
+    <span class="who ws">Voice — from the white</span>
+    <span class="line">"Your clan name is Minamoto now, isn't it, Kazutora."</span>
+  </div>
+  <div class="nar">Not a question. A statement. Said with the certainty of someone who already knows everything about you — and has for a long time.</div>
+  <div class="nar">It hit him harder than the strike that had brought him here.</div>
+</div>
+
+<div class="beat dream big">
+  <div class="nar">The white mist gathered. No hurry. It took the shape of something ancient and humanoid. Eyes that opened slowly and held the stillness of something that stopped being surprised by the world centuries ago.</div>
+  <div class="nar">The White Spirit. Looking at Kazutora the way you look at someone you've watched for a very long time.</div>
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"You changed your clan name for a girl. A girl who is gone now."</span>
+  </div>
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"Am I correct?"</span>
+  </div>
+  <div class="nar">Kazutora was quiet for a long time.</div>
+  <div class="dlg">
+    <span class="who k">Kazutora</span>
+    <span class="line">"Yes. Her name was Masako Minamoto. She was my only one."</span>
+  </div>
+  <div class="nar">The white void breathed around them. The Spirit said nothing more. It simply held the weight of what had been said — the way only something ancient knows how.</div>
+  <div class="nar">The dream faded to silence.</div>
+</div>
+
+<div class="cend">
+  <div class="cendline"></div>
+  <div class="cendlabel">End of Chapter Three</div>
+  <div class="cendhook">She was gone. But she hadn't left him.<br>That white light — it was her name. Written in energy.</div>
+</div>
+</article>
+
+<!-- ━━━━━━━━ CHAPTER 4 ━━━━━━━━ -->
+<article class="chap" data-ch="4">
+<div class="chead">
+  <div class="ckbg">絆</div>
+  <div class="cnum">Chapter Four</div>
+  <h2 class="ctitle">The Boy Who Sealed Himself Shut</h2>
+  <p class="csub">"Grief doesn't always weep. Sometimes it just quietly closes every door."</p>
+  <div class="cdiv"><span class="csym">⚔</span></div>
+</div>
+
+<div class="beat mem">
+  <div class="nar">He was ten when his father died. Eleven when his mother followed.</div>
+  <div class="nar">The village offered food, kind words, and the awkward silence of people who want to help and don't know how. He turned all of it away. Not from cruelty — from a grief so complete there was simply no room for anything else inside it.</div>
+  <div class="nar">He didn't become cold on purpose. He became cold the way iron becomes cold — gradually, in the absence of warmth. He stopped talking. He started training. He made repetition his entire world, because repetition was the one thing that didn't ask anything back from him.</div>
+</div>
+
+<div class="beat mem">
+  <div class="nar">And then there was Masako.</div>
+  <div class="nar">Daughter of a bishop who had once been close to Kazutora's father. She had known about the boy down the road from the time she was old enough to understand loss. And unlike everyone else — who saw how closed he was and carefully kept their distance — Masako decided she was going to stand near it until it stopped being so sharp.</div>
+  <div class="scene">She began appearing near him. Not pushy — never that. She just existed in his orbit. Sitting nearby while he trained. Walking the same road. Leaving small things without explanation — a piece of fruit, a smooth stone from the river. Presence without demand.</div>
+  <div class="nar">He ignored her completely. For weeks, he perfected the art of looking directly through her.</div>
+  <div class="nar">She kept showing up anyway.</div>
+  <div class="think">Why won't she just leave. Everyone else left. Why is she still here.</div>
+</div>
+
+<div class="beat mem big">
+  <div class="nar">One afternoon, his practice sword knocked over a small carved figure she had quietly placed on a nearby stone. He had noticed it every day for two weeks and never said anything. Now it lay in pieces on the ground below.</div>
+  <div class="nar">He looked at it. He said nothing. He turned back to his drill.</div>
+  <div class="nar">Masako picked up every piece without a word. She didn't cry. She didn't raise her voice. She held the broken figure and looked at it. Then she looked at him.</div>
+  <div class="nar">Not angry. Not sad. Something far worse — understanding. She understood exactly why he hadn't apologized. She understood what the coldness was made from. She saw the real shape of him, beneath every wall he had built. And she said all of that with her eyes, without a single word spoken.</div>
+  <div class="dlg ma">
+    <span class="who m">Masako — quietly, without blame</span>
+    <span class="line">"My grandfather carved this for me. He died the year before yours did."</span>
+  </div>
+  <div class="nar">She set the pieces back down on the stone. Folded her hands. And walked home.</div>
+  <div class="nar">Kazutora stood in the training ground long after she was gone. Holding his wooden sword. Feeling something he hadn't felt in years — the weight of having been truly seen by someone you'd tried very hard not to be seen by.</div>
+</div>
+
+<div class="beat mem">
+  <div class="nar">That night, his grandfather found him in the dark of the dojo. Still in his training clothes. Not moving.</div>
+  <div class="dlg">
+    <span class="who g">Grandfather — sitting beside him, not demanding anything</span>
+    <span class="line">"She isn't trying to fix you, Kazutora. She's just refusing to pretend you aren't there."</span>
+  </div>
+  <div class="dlg">
+    <span class="who g">Grandfather</span>
+    <span class="line">"Most people, when they see a wound, either try to fix it or walk away from it. She's doing neither. She's just sitting beside it."</span>
+  </div>
+  <div class="dlg">
+    <span class="who g">Grandfather</span>
+    <span class="line">"That is rarer than any strength I can teach you, my son."</span>
+  </div>
+  <div class="nar">Kazutora said nothing. But the words got in anyway — the way important things always do. Through the cracks. In the quiet. When the walls aren't fully raised.</div>
+</div>
+
+<div class="beat mem">
+  <div class="nar">The next morning, he apologized. Two words. Standing in the road. Not quite able to look at her directly.</div>
+  <div class="nar">She accepted it the same way she accepted everything — with calm certainty, like she had known it was coming and had been waiting at the right distance for it to arrive.</div>
+  <div class="nar">After that, something shifted between them. Nothing dramatic. But he stopped looking through her. He started looking at her instead. And what he found — when he finally let himself look — was the only person in the world who had understood from the very start that he wasn't broken. Just closed. And had waited, without any guarantee of return, for him to open.</div>
+</div>
+
+<div class="cend">
+  <div class="cendline"></div>
+  <div class="cendlabel">End of Chapter Four</div>
+  <div class="cendhook">She didn't save him from the grief.<br>She stayed beside it — until he was finally ready to carry it himself.<br>That is a different kind of saving. And it lasts longer.</div>
+</div>
+</article>
+
+<!-- ━━━━━━━━ CHAPTER 5 ━━━━━━━━ -->
+<article class="chap" data-ch="5">
+<div class="chead">
+  <div class="ckbg">別</div>
+  <div class="cnum">Chapter Five</div>
+  <h2 class="ctitle">Goodbye</h2>
+  <p class="csub">"She smiled so he wouldn't fall apart. That's the kind of person she was."</p>
+  <div class="cdiv"><span class="csym">⚔</span></div>
+</div>
+
+<div class="beat">
+  <div class="scene">Years later. Kazutora is grown. Shaped by discipline, by scars, by the controlled stillness of a man who has become very good at feeling nothing he doesn't choose to feel.</div>
+  <div class="nar">His grandfather finds him in the dojo at dusk. The old man stands in the doorway for a moment. Something about the way he holds himself is different tonight — heavier. Like he is carrying the news physically.</div>
+</div>
+
+<div class="beat big">
+  <div class="dlg">
+    <span class="who g">Grandfather</span>
+    <span class="line">"You need to go see Masako."</span>
+  </div>
+  <div class="dlg">
+    <span class="who k">Kazutora</span>
+    <span class="line">"Why?"</span>
+  </div>
+  <div class="dlg">
+    <span class="who g">Grandfather — steady, because someone has to be</span>
+    <span class="line">"She is going to die. She has been ill for some time. There is nothing more the physicians can do."</span>
+  </div>
+  <div class="nar">Kazutora didn't move. Didn't breathe. He had spent years training for every kind of loss. Hardening himself against every kind of pain.</div>
+  <div class="nar">Nothing had prepared him for this word. For the way it settled over the room like falling ash.</div>
+</div>
+
+<div class="beat big" data-sound="whoosh">
+  <div class="sfx">ダダダダダ！！ — Running. No technique. No form. Just need.</div>
+  <div class="nar">He was outside before he had decided to move. Running harder than he had ever run from any enemy — toward something he was terrified of arriving too late for.</div>
+</div>
+
+<div class="beat mem">
+  <div class="scene">He arrives. Small room. Soft light. She is lying near the window, her frame thinner than he remembers. The illness has been taking from her.</div>
+  <div class="nar">But it hasn't taken her expression.</div>
+  <div class="nar">When she sees him in the doorway, her face opens into something so quietly warm, so free of any blame for every moment he wasn't there, every word he never said — it stops him where he stands.</div>
+  <div class="nar">She smiled. Not a brave smile. A real one. The smile of someone genuinely glad to see the person they wanted most.</div>
+  <div class="dlg">
+    <span class="who k">Kazutora — barely above a whisper</span>
+    <span class="line">"Masako. Can we start again? From the very beginning?"</span>
+  </div>
+</div>
+
+<div class="beat mem big">
+  <div class="dlg ma">
+    <span class="who m">Masako — softly</span>
+    <span class="line">"We never stopped, Kazutora. You just didn't always know we had started."</span>
+  </div>
+  <div class="nar">Her body gave way slowly. He crossed the room in two steps and caught her. Held her. She rested her hands on his arms — light as paper now, and cold — as if she was holding something she had already made peace with letting go of.</div>
+  <div class="dlg ma">
+    <span class="who m">Masako</span>
+    <span class="line">"You were always the most remarkable person in every room. The only one who couldn't see it. I saw it — the very first time I ever looked at you."</span>
+  </div>
+</div>
+
+<div class="beat mem">
+  <div class="dlg">
+    <span class="who k">Kazutora — voice breaking for the first time in years</span>
+    <span class="line">"Don't say it like it's over. There are physicians in the capital — I will find someone, I will—"</span>
+  </div>
+  <div class="dlg ma">
+    <span class="who m">Masako</span>
+    <span class="line">"Kazutora."</span>
+  </div>
+  <div class="nar">Just his name. With so much gentleness it silenced him completely.</div>
+  <div class="dlg ma">
+    <span class="who m">Masako</span>
+    <span class="line">"You can't save me from this. But you can do something much harder — you can keep going after."</span>
+  </div>
+  <div class="nar">Tears fell from his eyes. He didn't stop them. She reached up and touched one away with her thumb — gentle, the way she had always touched every hard thing in her life.</div>
+</div>
+
+<div class="beat mem big">
+  <div class="dlg ma">
+    <span class="who m">Masako — her voice growing quieter</span>
+    <span class="line">"Don't carry me as a wound, Kazutora. Carry me as a reason."</span>
+  </div>
+  <div class="dlg ma">
+    <span class="who m">Masako</span>
+    <span class="line">"Become the man I always knew you were. And somewhere in whatever comes after — I'll find you again."</span>
+  </div>
+  <div class="nar">He held her until the room went completely still. He didn't let go for a long time after. There was no one left to tell him to.</div>
+  <div class="dlg ma">
+    <span class="who m">Masako — her last words</span>
+    <span class="line">"Thank you… Kazutora. Goodbye."</span>
+  </div>
+</div>
+
+<div class="cend">
+  <div class="cendline"></div>
+  <div class="cendlabel">End of Chapter Five</div>
+  <div class="cendhook">"Don't carry me as a wound. Carry me as a reason."<br>He would spend the rest of his life learning what those words truly meant.</div>
+</div>
+</article>
+
+<!-- ━━━━━━━━ CHAPTER 6 ━━━━━━━━ -->
+<article class="chap" data-ch="6">
+<div class="chead">
+  <div class="ckbg">使</div>
+  <div class="cnum">Chapter Six</div>
+  <h2 class="ctitle">The Weight of a Mission</h2>
+  <p class="csub">"Grief transformed into purpose — that is the one thing darkness has no answer for."</p>
+  <div class="cdiv"><span class="csym">⚔</span></div>
+</div>
+
+<div class="beat dream">
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"Stop living in the past, Kazutora. The past is a thief. It takes everything and gives nothing back. The present needs you. The future needs you more than the past ever deserved."</span>
+  </div>
+</div>
+
+<div class="beat">
+  <div class="nar">His eyes snapped open.</div>
+  <div class="nar">He was on the ground in the ruined street. The white aura faded from his hands like embers going cold. The dream released him all at once — like surfacing from deep water.</div>
+  <div class="nar">He sat up slowly. His chest felt hollow in the specific way it always felt after remembering something he kept locked away.</div>
+  <div class="think">That energy. It came the moment I thought of her. It came from her. From whatever she left inside me when she left everything else.</div>
+</div>
+
+<div class="beat">
+  <div class="dlg sp">
+    <span class="who ws">White Spirit — speaking from within him now, close as a thought</span>
+    <span class="line">"You aren't just a vessel, Kazutora. You were chosen because of what you carry — not despite it."</span>
+  </div>
+  <div class="dlg">
+    <span class="who k">Kazutora</span>
+    <span class="line">"Chosen for what. Say it plainly."</span>
+  </div>
+</div>
+
+<div class="beat big">
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"The God of Bad Spirits. He is the source of all of it — the darkness, the Black Spirits, every creature you will ever face. For generations, he has been hunting samurai. Not killing them. Consuming them. Stealing their power, their light, their souls — and adding it all to himself."</span>
+  </div>
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"The good spirits that once guided warriors — most are trapped inside him now. The samurai who carried them have been turned. Everything that was once light has become part of his darkness."</span>
+  </div>
+  <div class="think">Every name I grew up learning. Every warrior I trained in honor of. Gone — or worse. Turned.</div>
+  <div class="think">Am I truly the last one?</div>
+</div>
+
+<div class="beat">
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"You are the last he hasn't reached. And you are the only one who can stop him — not because you're the strongest samurai. Because of what drives you."</span>
+  </div>
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"Darkness only knows how to consume. But what lives in you — what exploded out of you when you thought of her — that cannot be absorbed. Cannot be extinguished. It is grief that became purpose. And that is the one weapon the God of Bad Spirits has never faced."</span>
+  </div>
+</div>
+
+<div class="beat big" data-sound="whoosh">
+  <div class="dlg sp">
+    <span class="who ws">White Spirit — final, absolute</span>
+    <span class="line">"Find him. Fight him. Free every soul he has ever taken. Do this — and you will not just survive. You will become the thing this world has been waiting for. A legend."</span>
+  </div>
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"Kazutora. Fight. Fight until your very last breath."</span>
+  </div>
+  <div class="nar">He stood. The ruined street around him. Stars appearing overhead one by one as the unnatural fog finally pulled away.</div>
+  <div class="nar">The white aura settled inside him — not fading. Finding its place. Like a sword discovering the sheath it was always made for.</div>
+  <div class="think">Carry me as a reason. Not a wound.</div>
+  <div class="think">I understand now, Masako. I finally understand.</div>
+</div>
+
+<div class="cend">
+  <div class="cendline"></div>
+  <div class="cendlabel">End of Chapter Six</div>
+  <div class="cendhook">He wasn't the last samurai because he was the strongest.<br>He was the last because he had something to fight for that could never be taken from him.</div>
+</div>
+</article>
+
+<!-- ━━━━━━━━ CHAPTER 7 ━━━━━━━━ -->
+<article class="chap" data-ch="7">
+<div class="chead">
+  <div class="ckbg">最後</div>
+  <div class="cnum">Chapter Seven</div>
+  <h2 class="ctitle">The Last Samurai</h2>
+  <p class="csub">"A legend isn't born from victory. It's born from refusing to stop."</p>
+  <div class="cdiv"><span class="csym">⚔</span></div>
+</div>
+
+<div class="beat">
+  <div class="scene">The hours before dawn. The heaviest dark of the night — right before the light returns.</div>
+  <div class="nar">He walked through the ruined village. Cracked earth. Broken stone. Empty houses. The ghosts of lanterns that would never be lit again.</div>
+  <div class="dlg">
+    <span class="who k">Kazutora — to the silence</span>
+    <span class="line">"What happened to the samurai? The real ones — the warriors I grew up learning about. Are they all truly gone?"</span>
+  </div>
+</div>
+
+<div class="beat">
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"Spirits are older than anything you have words for. They exist in the planets, the stars, the universe — in layers of reality humans were never meant to fully see. Every living being carries one. And the path a person walks is shaped, far more than they know, by the spirit inside them."</span>
+  </div>
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"The samurai were not just warriors. They were bearers of light. The God of Bad Spirits has been putting out those lights, one by one, for a very long time."</span>
+  </div>
+  <div class="dlg">
+    <span class="who k">Kazutora</span>
+    <span class="line">"How many are left?"</span>
+  </div>
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"You."</span>
+  </div>
+</div>
+
+<div class="beat big">
+  <div class="nar">One word. And it landed like a stone dropped into still water.</div>
+  <div class="nar">One man. One light left. In a darkness that had consumed everyone else.</div>
+  <div class="nar">He let it settle. Didn't flinch. Didn't collapse. Just stood in it — the way a man stands in rain. Present. Already deciding what comes next.</div>
+  <div class="think">If I'm the last — then the last one doesn't get to hesitate. The last one moves. The last one finds the God who did this. And makes it mean something.</div>
+  <div class="sfx">ダダダ！ — He runs.</div>
+</div>
+
+<div class="beat" data-sound="sword">
+  <div class="dlg sp">
+    <span class="who ws">White Spirit — urgent</span>
+    <span class="line">"Kazutora. Stop. Look at the ground beneath you."</span>
+  </div>
+  <div class="nar">He stopped. At his feet — a green light pulsed upward through the cracked earth. Sickly. Wrong. The aura of something weak and dark, sent ahead of something larger.</div>
+  <div class="dlg">
+    <span class="who k">Kazutora</span>
+    <span class="line">"What is that?"</span>
+  </div>
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"A weak spirit. A scout sent to slow you down. Look at its aura — see how it flickers? See the black at the core underneath the green? Evil spirits always show their nature if you know what to look for. The darkness always bleeds through."</span>
+  </div>
+</div>
+
+<div class="beat big" data-sound="sword">
+  <div class="sfx">シャキン！ — Steel answers.</div>
+  <div class="nar">The green light shuddered — and dissolved. Gone. Without a single strike landing.</div>
+  <div class="nar">As if being faced by a man who was no longer afraid of what the darkness carried was enough to unmake it entirely.</div>
+  <div class="dlg">
+    <span class="who k">Kazutora — staring at the empty ground</span>
+    <span class="line">"…No way."</span>
+  </div>
+  <div class="dlg sp">
+    <span class="who ws">White Spirit</span>
+    <span class="line">"Weak spirits cannot stand against certainty. Against someone who knows what they are fighting for. Remember that."</span>
+  </div>
+</div>
+
+<div class="beat big">
+  <div class="nar">He sheathed his sword.</div>
+  <div class="nar">Looked up from the empty ground. Looked at the road ahead — dark, unknown, endless.</div>
+  <div class="nar">Every samurai before him was gone. The world was tilting toward an abyss that had been growing for generations. He was one man. One blade. One spirit inside him. And the memory of a girl who had told him to carry her as a reason, not a wound.</div>
+  <div class="nar">He thought of her face. The way she had always looked at him — like she had already seen the ending of his story and wasn't afraid of it. Like she knew what he was capable of, long before he did.</div>
+  <div class="think">I understand now, Masako.</div>
+  <div class="think">I finally understand.</div>
+  <div class="nar">The last samurai walked forward into the dark.</div>
+  <div class="nar">The journey had only just begun.</div>
+</div>
+
+<div class="cend">
+  <div class="cendline"></div>
+  <div class="cendlabel">End of Chapter Seven</div>
+  <div class="cendhook">
+    The God of Bad Spirits still breathes.<br>
+    Every stolen soul still waits in the dark.<br>
+    And the last samurai still walks.<br><br>
+    — The story continues —
+  </div>
+</div>
+</article>
+
+</main>
+
+<!-- STORY END -->
+<div id="end">
+  <span class="ek">侍</span>
+  <div class="et">To Be Continued</div>
+  <div class="es">"One man. One blade. One reason that cannot be extinguished."</div>
+</div>
+
+<div id="fb"></div>
+
+<!-- ══════════════════════════════════
+     SCRIPTS
+══════════════════════════════════ -->
+<script>
+// ── AUDIO ENGINE ──────────────────────────────
+const bgm      = document.getElementById('bgm');
+const sfxSword = document.getElementById('sfxSword');
+const sfxBoom  = document.getElementById('sfxBoom');
+const sfxWhoosh= document.getElementById('sfxWhoosh');
+let soundOn    = false;
+let bgmStarted = false;
+
+bgm.volume = 0.22;
+sfxSword.volume = 0.55;
+sfxBoom.volume  = 0.5;
+sfxWhoosh.volume= 0.4;
+
+function startBGM(){
+  if(bgmStarted || !soundOn) return;
+  bgm.play().then(()=>{ bgmStarted=true; }).catch(()=>{});
+}
+
+function playFx(el){
+  if(!soundOn) return;
+  const type = el.dataset.sound;
+  if(!type) return;
+  let audio;
+  if(type==='sword')  audio=sfxSword;
+  if(type==='boom')   audio=sfxBoom;
+  if(type==='whoosh') audio=sfxWhoosh;
+  if(!audio) return;
+  audio.currentTime=0;
+  audio.play().catch(()=>{});
+}
+
+function toggleSound(){
+  soundOn = !soundOn;
+  const btn = document.getElementById('snd');
+  if(soundOn){
+    btn.textContent='🔊';
+    btn.style.opacity='1';
+    startBGM();
+    if(bgmStarted) bgm.play().catch(()=>{});
+  } else {
+    btn.textContent='🔇';
+    btn.style.opacity='0.5';
+    bgm.pause();
+  }
+}
+
+function startReading(){
+  soundOn = true;
+  document.getElementById('snd').textContent='🔊';
+  document.getElementById('snd').style.opacity='1';
+  document.getElementById('story').scrollIntoView({behavior:'smooth'});
+  setTimeout(()=>startBGM(), 600);
+}
+
+// ── LOADER ────────────────────────────────────
+window.addEventListener('load',()=>{
+  setTimeout(()=> document.getElementById('loader').classList.add('out'), 3000);
+});
+
+// ── PROGRESS ──────────────────────────────────
+function updateProg(){
+  const s=window.scrollY, h=document.documentElement.scrollHeight-window.innerHeight;
+  document.getElementById('prog').style.width=(s/h*100)+'%';
+}
+
+// ── CHAPTER NAV ───────────────────────────────
+const TITLES=['','The Fog That Should Not Exist','The Power That Has No Name Yet',
+  'The White That Does Not Burn','The Boy Who Sealed Himself Shut',
+  'Goodbye','The Weight of a Mission','The Last Samurai'];
+
+function updateNav(){
+  const nav=document.getElementById('cnav');
+  const txt=document.getElementById('cnavt');
+  if(window.scrollY < document.getElementById('hero').offsetHeight*0.4){
+    nav.classList.remove('show'); return;
+  }
+  nav.classList.add('show');
+  const mid=window.scrollY+window.innerHeight/2;
+  document.querySelectorAll('.chap').forEach(c=>{
+    if(mid>=c.offsetTop && mid<c.offsetTop+c.offsetHeight)
+      txt.textContent='Ch.'+c.dataset.ch+' — '+TITLES[+c.dataset.ch];
+  });
+}
+
+// ── SCROLL REVEAL + SOUND TRIGGERS ────────────
+const beatObs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting && !e.target.classList.contains('on')){
+      e.target.classList.add('on');
+      playFx(e.target);
+    }
+  });
+},{threshold:0.15, rootMargin:'0px 0px -40px 0px'});
+
+document.querySelectorAll('.beat').forEach(b=> beatObs.observe(b));
+
+// ── END REVEAL ────────────────────────────────
+const endObs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.querySelectorAll('.ek,.et,.es').forEach(el=>el.classList.add('on'));
+    }
+  });
+},{threshold:0.3});
+endObs.observe(document.getElementById('end'));
+
+// ── PARALLAX HERO BG ──────────────────────────
+window.addEventListener('scroll',()=>{
+  const bg=document.querySelector('.hbg');
+  if(bg) bg.style.transform=`translate(-50%,calc(-50% + ${window.scrollY*.28}px))`;
+  updateProg();
+  updateNav();
+},{passive:true});
+</script>
+</body>
+</html>
